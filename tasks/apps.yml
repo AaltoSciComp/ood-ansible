@@ -64,16 +64,16 @@
 # The following are tasks to create (and use) a python virtual environment 
 # for apps that have the "python_environment property defined.
 - name: Create Python virtual environment
-  command: python3 -m venv "{{ ood_app_dir }}/{{ item.key }}/venv"
+  command: python3 -m venv "{{ ood_sys_app_dir }}/{{ item.key }}/venv"
   args:
-    creates: "{{ ood_app_dir }}/{{ item.key }}/venv"
+    creates: "{{ ood_sys_app_dir }}/{{ item.key }}/venv"
   when: item.value.python_environment is defined
   loop: "{{ ood_apps | default({}) | dict2items }}"
 
 - name: Install Python dependencies from requirements.txt
   pip:
-    requirements: "{{ ood_app_dir }}/{{ item.key }}/requirements.txt"
-    virtualenv: "{{ ood_app_dir }}/{{ item.key }}/venv"
+    requirements: "{{ ood_sys_app_dir }}/{{ item.key }}/requirements.txt"
+    virtualenv: "{{ ood_sys_app_dir }}/{{ item.key }}/venv"
   when:
     - item.value.python_environment is defined
   loop: "{{ ood_apps | default({}) | dict2items }}"
@@ -89,7 +89,7 @@
       export PYTHONNOUSERSITE=1
 
       exec /usr/bin/env python3 "$@"
-    dest: "{{ ood_app_dir }}/{{ item.key }}/bin/python"
+    dest: "{{ ood_sys_app_dir }}/{{ item.key }}/bin/python"
     mode: '0755'
   when: item.value.python_environment is defined
   loop: "{{ ood_apps | default({}) | dict2items }}"
