@@ -59,3 +59,39 @@
     directory_mode: yes
   when: item.value.initializers is defined
   loop: "{{ ood_apps | default({}) | dict2items }}"
+
+
+# The following are tasks to create (and use) a python virtual environment 
+# for apps that have the "python_environment property defined.
+- name: Create Python virtual environment
+  command: python3 -m venv "{{ ood_base_conf_dir }}/apps/{{ item.key }}/venv"
+  args:
+    creates: "{{ ood_base_conf_dir }}/apps/{{ item.key }}/venv"
+  when: item.value.python_environment is defined
+  loop: "{{ ood_apps | default({}) | dict2items }}"
+
+- name: Install Python dependencies from requirements.txt
+  pip:
+    requirements: "{{ ood_base_conf_dir }}/apps/{{ item.key }}/requirements.txt"
+    virtualenv: "{{ ood_base_conf_dir }}/apps/{{ item.key }}/venv"
+  when:
+    - item.value.python_environment is defined
+    - ansible.builtin.file.stat.exists("{{ ood_base_conf_dir }}/apps/{{ item.key }}/requirements.txt")
+  loop: "{{ ood_apps | default({}) | dict2items }}"
+
+- name: Create custom python executable
+  copy:
+    content: |
+      #!/usr/bin/env bash
+
+      SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+      source $SCRIPT_DIR/../venv/bin/activate
+
+      export PYTHONNOUSERSITE=1
+
+      exec /usr/bin/env python3 "$@"
+    dest: "{{ ood_base_conf_dir }}/apps/{{ item.key }}/bin/python"
+    mode: '0755'
+  when: item.value.python_environment is defined
+  loop: "{{ ood_apps | default({}) | dict2items }}"
+  
