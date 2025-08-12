@@ -78,6 +78,14 @@
     - item.value.python_environment is defined
   loop: "{{ ood_apps | default({}) | dict2items }}"
 
+- name: Create executable folder
+  ansible.builtin.file:
+    path: "{{ ood_sys_app_dir }}/{{ item.key }}/bin"
+    state: directory
+    mode: '0755'
+  when: item.value.python_environment is defined
+  loop: "{{ ood_apps | default({}) | dict2items }}"
+  
 - name: Create custom python executable
   copy:
     content: |
